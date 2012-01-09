@@ -33,11 +33,8 @@ class ChildProcess
          * 
          * @param name The name of the child process that is given by the main
          * process.
-         * @param sleepTime The sleep time (in seconds) for the child process.
-         * @param repeatCount The number of times the child process will repeat
-         * the sleep/wake-up operations.
          */
-        ChildProcess(std::string name, int sleepTime, int repeatCount);
+        ChildProcess(std::string name, std::string rawString, std::string encryptedString, int algorithmId, int keyLength, int partitionNumber, int partitionSize);
     
     // private attributes and methods of the class.
     private:
@@ -46,13 +43,6 @@ class ChildProcess
          * The name of the child process that is given by the main process.
          */
         std::string name;
-        
-        /**
-         * Halts the current process for the given duration (in seconds).
-         * 
-         * @param duration The sleep time (in seconds) for the child process.
-         */
-        void sleepWell(int duration);
 };
 
 // end of the class signature.

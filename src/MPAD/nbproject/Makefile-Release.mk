@@ -34,7 +34,11 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/main.o
+	${OBJECTDIR}/AlgorithmDES.o \
+	${OBJECTDIR}/Config.o \
+	${OBJECTDIR}/ChildProcess.o \
+	${OBJECTDIR}/Logger.o \
+	${OBJECTDIR}/MainProcess.o
 
 
 # C Compiler Flags
@@ -61,10 +65,30 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/mpad: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/mpad ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
-${OBJECTDIR}/main.o: main.cpp 
+${OBJECTDIR}/AlgorithmDES.o: AlgorithmDES.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.cpp
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/AlgorithmDES.o AlgorithmDES.cpp
+
+${OBJECTDIR}/Config.o: Config.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/Config.o Config.cpp
+
+${OBJECTDIR}/ChildProcess.o: ChildProcess.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/ChildProcess.o ChildProcess.cpp
+
+${OBJECTDIR}/Logger.o: Logger.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/Logger.o Logger.cpp
+
+${OBJECTDIR}/MainProcess.o: MainProcess.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/MainProcess.o MainProcess.cpp
 
 # Subprojects
 .build-subprojects:

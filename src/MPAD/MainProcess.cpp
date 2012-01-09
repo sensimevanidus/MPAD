@@ -4,14 +4,15 @@
  * Source code file for the MainProcess class.
  * 
  * @author Onur Yaman <onuryaman@gmail.com>
- * @version 0.1
- * @since 2011-10-28
+ * @version 0.3
+ * @since 2011-11-22
  */
 
 // include standard libraries.
 #include <cstdlib>
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
 
 // include the time library for date/time related functions.
 #include <time.h>
@@ -27,6 +28,9 @@
 // include the errno library for the errno variable.
 #include <errno.h>
 
+// include the vector library.
+#include <vector>
+
 // include the signature of the class.
 #include "MainProcess.h"
 
@@ -35,6 +39,7 @@
 
 // include the Logger class signature.
 #include "Logger.h"
+#include "AlgorithmDES.h"
 
 /**
  * Main entry of the application.
@@ -60,9 +65,7 @@ MainProcess::MainProcess()
     Logger::writeToLogFile("Main process started!");
     
     // calculate the number of child processes to be created.
-    int processCount = this->getNumberOfChildren(
-        Config::readValue("numberOfChildren", "main")
-    );
+    int processCount = this->getNumberOfChildren(Config::readValue("numberOfChildren", "main"));
     
     // store the process ids of all child processes. it will be used for waiting
     // for their termination.
@@ -70,12 +73,35 @@ MainProcess::MainProcess()
 
     // create a random seed.
     srand((unsigned) time(NULL));
+    // create the key.
+    std::vector<unsigned char> key(56, '0');
+    // generate the key randomly.
+
+    for (int i = 40; i < 56; i++) {
+        int ran = (((((rand()) % 65536) + 1) >> i) & 1);
+        if (0 == ran) {
+            key.at(i) = '0';
+        } else {
+            key.at(i) = '1';
+        }
+    }
+
+    // generate the random key.
+    Logger::writeToLogFile("Key is: %s", (const char*) key.data());
+    
+    // -------------------------------------------------------------------------
+    // @todo
+    AlgorithmDES algoDES;
+    std::string rawString("This is the raw string!");
+    std::string encryptedString;
+    encryptedString = algoDES.encrpyt(rawString, (const char*) key.data(), 56);
     
     // create child processes.
     for (int i = 0; i < processCount; i++) {
         // store the child process id in the local variable.
-        processIds[i] = this->createChild();
+        processIds[i] = this->createChild(rawString, encryptedString, 1, 56, i, processCount);
     }
+    // -------------------------------------------------------------------------
     
     // wait for each child to exit.
     for (int i = 0; i < processCount; i++) {
@@ -89,6 +115,18 @@ MainProcess::MainProcess()
         Logger::writeToLogFile("Child process %s is terminated!",
             this->generateChildName(processIds[i])
         );
+        
+        if (WIFEXITED(status)) {
+            // if the key is found;
+            if (2 == WEXITSTATUS(status)) {
+                Logger::writeToLogFile("All child processes will be terminated now!");
+
+                // kill all child processes.
+                for (int i = 0; i < processCount; i++) {
+                    kill(processIds[i], SIGTERM);
+                }
+            }
+        }
     }
     
     // log the main process' terminate event.
@@ -102,22 +140,10 @@ MainProcess::MainProcess()
  * @see ChildProcess
  * @return The process id of the created child process. 
  */
-pid_t MainProcess::createChild()
+pid_t MainProcess::createChild(std::string rawString, std::string encryptedString, int algorithmId, int keyLength, int partitionNumber, int partitionSize)
 {
     // log the child process' creation event.
     Logger::writeToLogFile("A new child will be created!");
-    
-    // generate the random sleep time.
-    char randomSleepTime[5];
-    sprintf(randomSleepTime, "%d", (this->generateRandomInteger(
-        Config::readValue("maxSleepTimeInSeconds", "child")
-    )));
-
-    // generate the random sleep repeat count.
-    char randomRepeatCount[5];
-    sprintf(randomRepeatCount, "%d", (this->generateRandomInteger(
-        Config::readValue("maxSleepRepeatCount", "child")
-    )));
     
     // fork the process (create the child).
     pid_t pid = fork();
@@ -126,9 +152,15 @@ pid_t MainProcess::createChild()
     if (0 == pid) {
         // generate a name for the child process.
         std::string childName = this->generateChildName((int) getpid()).c_str();
-    
+
+        std::stringstream ss1, ss2, ss3, ss4;
+        ss1 << algorithmId;
+        ss2 << keyLength;
+        ss3 << partitionNumber;
+        ss4 << partitionSize;
+        
         // then instantiate the ChildProcess class.
-        execl("./child_p", "child_p", childName.c_str(), reinterpret_cast<const char*>(randomSleepTime), reinterpret_cast<const char*>(randomRepeatCount), NULL);
+        execl("./child_p", "child_p", childName.c_str(), rawString.c_str(), encryptedString.c_str(), ss1.str().c_str(), ss2.str().c_str(), ss3.str().c_str(), ss4.str().c_str(), NULL);
         /*
         // if an error occurred;
         if (0 != status) {
@@ -254,28 +286,33 @@ int MainProcess::getNumberOfChildren(int numberOfChildren)
         Logger::writeToLogFile("The number of child processes to be created defined in the configuration file exceeds the process quota for the current user; so the configuration setting is discarded. Instead, the maximum value will be used.");
         numberOfChildren = maxNumberOfChildProcesses;
     }
-    
+        
     // return the number of child processes to be created.
     return numberOfChildren;
 }
 
 /**
- * Given an integer that represents a maximum value, generates a random
- * number between 0 and that maximum value.
+ * Given an integer that represents the length of the key to be produced,
+ * generates a random key and returns it.
  * 
- * The method will be used for calculating the duration of the sleep
- * operation of a child process and the repeat count of its sleep/
- * wake-up operations.
+ * Note that the size of the key length can be 128 at maximum.
  * 
- * @see Config
  * @see ChildProcess
- * @param maxLimit Maximum value of the randomly generated integer.
- * @return The randomly generated number.
+ * @param numberOfBits Length of the key to be generated.
+ * @return The randomly generated ley.
  */
-int MainProcess::generateRandomInteger(int maxLimit)
+std::vector<unsigned char> generateRandomKey(int numberOfBits)
 {
-    // randomly generate a number and return it.
-    return (rand() % maxLimit) + 1;
+    // create the key.
+    std::vector<unsigned char> key(numberOfBits, '0');
+
+    // generate the key randomly.
+    for (int i = 0; i < numberOfBits; i++) {
+        key.at(i) = (unsigned char) (rand() % 2);
+    }
+    
+    // return the key.
+    return key;
 }
 
 /**

@@ -78,7 +78,7 @@ void Logger::writeToLogFile(std::string logMessage) {
         
         // log the message (including the date/time values and current
         // process' id.
-        logFile << ((std::string) buffer) << ", " << ((int) getpid()) << ", " << logMessage << std::endl;
+        logFile << ((std::string) buffer) << ", " << ((int) getpgid(getpid())) << ", " << ((int) getpid()) << ", " << logMessage << std::endl;
     }
     // if the file is not open;
     else {

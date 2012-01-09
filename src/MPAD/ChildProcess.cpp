@@ -21,6 +21,11 @@
 
 // include the Logger class signature.
 #include "Logger.h"
+#include "AlgorithmDES.h"
+#include <math.h>
+#include <vector>
+#include <sstream>
+#include <iostream>
 
 /**
  * Main entry of the application.
@@ -30,7 +35,8 @@
 int main(int argc, char **argv)
 {
     // instantiate the ChildProcess class.
-    new ChildProcess(std::string(argv[1]), atoi(argv[2]), atoi(argv[3]));
+    new ChildProcess(std::string(argv[1]), std::string(argv[2]), std::string(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7]));
+    //new ChildProcess(std::string("child process"), std::string("This is the raw string!"), std::string("T??*LY???pqXWSyJ??B^P???DE??????i?g?c!N2??ke??gkb???!??p?'P"), atoi("1"), atoi("56"), atoi("0"));
     
     // terminate the application.
     exit(EXIT_SUCCESS);
@@ -45,45 +51,40 @@ int main(int argc, char **argv)
  * @param repeatCount The number of times the child process will repeat
  * the sleep/wake-up operations.
  */
-ChildProcess::ChildProcess(std::string name, int sleepTime, int repeatCount)
+ChildProcess::ChildProcess(std::string name, std::string rawString, std::string encryptedString, int algorithmId, int keyLength, int partitionNumber, int partitionSize)
 {
     // mark the name of the process as an instance property.
     this->name = name;
+    Logger::writeToLogFile("Child %s is created!", name);
     
-    // log the start event.
-    Logger::writeToLogFile("%s started!", this->name);
+    uint64_t start = partitionNumber * ((uint64_t) pow(2, keyLength) / pow(2, partitionSize));
+    uint64_t end = start + ((uint64_t) pow(2, keyLength) / pow(2, partitionSize)) - 1;
+    std::string decryptedString;
     
-    // for the given repeatCount, halp the process.
-    for (int i = 0; i < repeatCount; i++) {
-        // halt the process for the given duration.
-        this->sleepWell(sleepTime);
+    for (uint64_t i = start; i < end; i++) {
+        // -------------------------------------------------------------------------
+        // @todo
+        AlgorithmDES algoDES;
+        // create the key.
+        std::vector<unsigned char> key(56, '0');
+        if (0 < partitionNumber) {
+                key.at(partitionSize - partitionNumber) = '1';
+        }
+        for (int j = 0; j < keyLength; j++) {
+            int bitValue = ((i >> j) & 1);
+            if (0 == bitValue) {
+                key.at(keyLength - j - 1) = '0';
+            } else {
+                key.at(keyLength - j - 1) = '1';
+            }
+        }
+        
+        decryptedString = algoDES.decrypt(encryptedString, (const char *)key.data(), keyLength);
+        
+        if (partitionNumber == 0 && rawString == decryptedString) {
+            Logger::writeToLogFile("The key is found! Key is: %s", (const char*) key.data());
+            
+            exit(2);
+        }
     }
-    
-    // log the terminate event.
-    Logger::writeToLogFile("%s will be terminated!", this->name);
-}
-
-/**
- * Halts the current process for the given duration (in seconds).
- * 
- * @param duration The sleep time (in seconds) for the child process.
- */
-void ChildProcess::sleepWell(int duration)
-{
-    // local variable for the log message.
-    char messageBuffer[50];
-    
-    // prepare the log message.
-    sprintf(messageBuffer, "%s will sleep for %d seconds!",
-        (this->name).c_str(), duration
-    );
-    
-    // log the sleep event.
-    Logger::writeToLogFile(std::string(messageBuffer));
-    
-    // halt the process.
-    sleep(duration);
-    
-    // log the wake-up event.
-    Logger::writeToLogFile("%s woke up!", this->name);
 }

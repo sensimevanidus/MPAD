@@ -4,15 +4,27 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>AlgorithmDES.h</itemPath>
+      <itemPath>AlgorithmInterface.h</itemPath>
+      <itemPath>ChildProcess.h</itemPath>
+      <itemPath>Config.h</itemPath>
+      <itemPath>Logger.h</itemPath>
+      <itemPath>MainProcess.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
                    projectFiles="true">
+      <itemPath>mpad.ini</itemPath>
+      <itemPath>mpad.log</itemPath>
     </logicalFolder>
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>main.cpp</itemPath>
+      <itemPath>AlgorithmDES.cpp</itemPath>
+      <itemPath>ChildProcess.cpp</itemPath>
+      <itemPath>Config.cpp</itemPath>
+      <itemPath>Logger.cpp</itemPath>
+      <itemPath>MainProcess.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"

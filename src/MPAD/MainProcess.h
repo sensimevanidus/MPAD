@@ -4,8 +4,8 @@
  * Header file for the MainProcess class.
  * 
  * @author Onur Yaman <onuryaman@gmail.com>
- * @version 0.1
- * @since 2011-10-28
+ * @version 0.2
+ * @since 2011-11-28
  */
 
 // make sure that the signature of the class is defined only once.
@@ -14,6 +14,9 @@
 
 // include the string library for the std::string class.
 #include <string>
+
+// include the vector library.
+#include <vector>
 
 /**
  * Signature of the MainProcess class.
@@ -41,7 +44,7 @@ class MainProcess
          * @see ChildProcess
          * @return The process id of the created child process. 
          */
-        pid_t createChild();
+        pid_t createChild(std::string rawString, std::string encryptedString, int algorithmId, int keyLength, int partitionNumber, int partitionSize);
         
         /**
          * Given the number of child processes to be created from the
@@ -56,19 +59,17 @@ class MainProcess
         int getNumberOfChildren(int numberOfChildren);
         
         /**
-         * Given an integer that represents a maximum value, generates a random
-         * number between 0 and that maximum value.
+         * Given the exact number of key length (e.g. 20-bits length), generates
+         * a random key.
          * 
-         * The method will be used for calculating the duration of the sleep
-         * operation of a child process and the repeat count of its sleep/
-         * wake-up operations.
+         * For the purpose of this project, maximum number of key size is
+         * 128-bits.
          * 
-         * @see Config
          * @see ChildProcess
-         * @param maxLimit Maximum value of the randomly generated integer.
-         * @return The randomly generated number.
+         * @param numberOfBits Exact value of key length.
+         * @return The randomly generated key.
          */
-        int generateRandomInteger(int maxLimit);
+        std::vector<unsigned char> generateRandomKey(int numberOfBits);
         
         /**
          * Given the process id of a child process, generates a unique name for
